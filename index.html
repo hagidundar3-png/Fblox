@@ -1,0 +1,235 @@
+const $=s=>document.querySelector(s);
+const state=JSON.parse(localStorage.getItem("fmax_state")||"null")||{
+ name:"F",fp:1000,inventory:["🎮"],friends:["Hamit","Sinan"],spins:2,ownedRoles:[],
+ dailyClaim:true,screen:"home",game:null,role:null,alive:true
+};
+
+function save(){localStorage.setItem("fmax_state",JSON.stringify(state))}
+function toast(t){let x=document.createElement("div");x.className="toast";x.textContent=t;document.body.append(x);setTimeout(()=>x.remove(),2200)}
+
+function nav(){
+ return `<header class="top">
+  <div class="logo">F<span>MAX</span></div>
+  <nav class="nav">
+    <button data-go="home">Ana Sayfa</button>
+    <button data-go="games">Oyunlar</button>
+    <button data-go="shop">Mağaza</button>
+    <button data-go="friends">Arkadaşlar</button>
+  </nav>
+  <div class="profile-mini">
+    <button class="secondary" data-action="admin" style="margin-right:10px; padding:2px 8px;">🔑 Kod Gir</button>
+    <span>💰 ${state.fp} FP</span>
+    <div class="avatar">${state.name[0]}</div>
+  </div>
+</header>`
+}
+
+function shell(content){$("#app").innerHTML=`<div class="app">${nav()}<main class="main">${content}</main></div>`;bind()}
+
+function bind(){
+ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{state.screen=b.dataset.go;render()});
+ document.querySelectorAll("[data-action]").forEach(b=>b.onclick=()=>actions(b.dataset.action));
+}
+
+function render(){
+ if(state.screen==="kim") return renderKim();
+ if(state.screen==="shop") return renderShop();
+ if(state.screen==="friends") return renderFriends();
+ if(state.screen==="games") return renderGames();
+ renderHome();
+}
+
+function renderHome(){
+ shell(`<section class="hero">
+  <div>
+    <div class="eyebrow">PRIVATE GAME PLATFORM</div>
+    <h1>Oyun senin.<br>Kurallar senin.</h1>
+    <p>FMAX; arkadaşlarınla oynayabileceğin küçük, özel bir oyun platformu.</p>
+    <div class="row">
+      <button class="primary" data-action="openKim">KİM'i Oyna</button>
+      <button class="secondary" data-go="games">Oyunlara Bak</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="muted">GÜNLÜK ÖDÜL</div>
+    <h2>+100 FP</h2>
+    <button class="secondary" data-action="daily">Ödülü Al</button>
+  </div>
+ </section>
+ <div class="games">
+  <article class="panel game">
+    <div class="eyebrow">GAME 01</div>
+    <h2>KİM</h2>
+    <p class="muted">Gizem, roller ve hayatta kalma.</p>
+    <button class="primary" data-action="openKim">Lobiye Gir →</button>
+  </article>
+  <article class="panel game">
+    <div class="eyebrow">GAME 02</div>
+    <h2>Yakında</h2>
+    <p class="muted">İkinci FMAX oyunu burada yer alacak.</p>
+    <button class="secondary" data-action="soon">Yakında</button>
+  </article>
+ </div>`)
+}
+
+function renderGames(){
+ shell(`<h1>Oyunlar</h1><p class="muted">FMAX içindeki oyunlar.</p>
+ <div class="games">
+  <article class="panel game">
+    <div class="eyebrow">01</div>
+    <h2>KİM</h2>
+    <p class="muted">Murder Mystery + Assassin + sosyal çıkarım.</p>
+    <button class="primary" data-action="openKim">Oyna</button>
+  </article>
+  <article class="panel game">
+    <div class="eyebrow">02</div>
+    <h2>Gizli Proje</h2>
+    <p class="muted">İkinci oyun geliştirme aşamasında.</p>
+  </article>
+ </div>`)
+}
+
+function renderFriends(){
+ shell(`<h1>Arkadaşlar</h1>
+ <div class="cards">
+  ${state.friends.map(x=>`<div class="panel stat"><div class="avatar">${x[0]}</div><h3>${x}</h3><span class="success">● Çevrimiçi</span></div>`).join("")}
+ </div><br>
+ <div class="panel">
+  <h3>Arkadaş davet kodu</h3>
+  <p class="muted">FMAX-${state.name.toUpperCase()}-4757</p>
+  <button class="secondary" data-action="copy">Kopyala</button>
+ </div>`)
+}
+
+function renderShop(){
+ let items=[
+  ["🧢","Neon Şapka",150],
+  ["🪽","FMAX Kanat",350],
+  ["🔇","Sessiz Katil",500],
+  ["🎭","Gizemli Maske",250],
+  ["🧛","Vampir Efekti",700],
+  ["🔫","Kütük Şerif",900]
+ ];
+ shell(`<h1>Mağaza</h1><p class="muted">Bakiyen: ${state.fp} FP</p>
+ <div class="shop">
+  ${items.map((i,n)=>`<div class="panel item"><div class="icon">${i[0]}</div><h3>${i[1]}</h3><div class="price">${i[2]} FP</div><button class="primary" data-action="buy:${n}:${i[1]}:${i[2]}">Satın Al</button></div>`).join("")}
+ </div><br>
+ <div class="panel">
+  <h3>🎡 Şans Çarkı</h3>
+  <p>Kalan ücretsiz dönüş: ${state.spins}</p>
+  <button class="secondary" data-action="spin">Çarkı Çevir</button>
+ </div>`)
+}
+
+function renderKim(){
+ $("#app").innerHTML=`<div class="app">${nav()}<main class="main">
+ <div class="row" style="justify-content:space-between">
+  <div><div class="eyebrow">KİM — LOBİ</div><h1>Kim olduğuna dikkat et.</h1></div>
+  <button class="secondary" data-action="leave">Lobiden Çık</button>
+ </div>
+ <div class="panel">
+  <div class="row">
+    <span>👥 8/10 Oyuncu</span><span>🗺️ İki Ev</span><span>⏱️ Başlangıç: 12 sn</span>
+    <button class="primary" data-action="start">Tur Başlat</button>
+  </div>
+ </div><br>
+ <div class="gamehud">
+  <aside class="panel hudbox">
+    <h3>Oyuncular</h3>
+    ${["F","Hamit","Sinan","Mert","Lily","Can","Efe","Ali"].map((x,i)=>`<p>${i===0?"🟣":"🔵"} ${x}</p>`).join("")}
+  </aside>
+  <section class="arena">
+    <div class="house a"></div><div class="house b"></div><div class="house c"></div>
+    <div class="task" style="left:12%;top:22%">Görev</div>
+    <div class="task" style="right:12%;top:30%">Görev</div>
+    ${[["F",45,60],["H",25,30],["S",72,25],["M",58,72],["L",30,72]].map((p,i)=>`<div class="playerdot ${i===0?"you":""}" style="left:${p[1]}%;top:${p[2]}\%">${p[0]}</div>`).join("")}
+  </section>
+  <aside class="panel hudbox">
+    <h3>Tur Bilgisi</h3>
+    <p>Rol: <strong>${state.role||"?"}</strong></p>
+    <p>Can: 100</p>
+    <p>Stres: 0</p>
+    <hr>
+    <button class="secondary" data-action="vent">Vent</button>
+  </aside>
+ </div></main></div>`;
+ bind();
+}
+
+function startGame(){
+ const roles=["Masum","Masum","Masum","Masum","Şerif","Katil"];
+ let selectedRole = roles[Math.floor(Math.random()*roles.length)];
+ 
+ // Özel Rol Kontrolleri
+ if(selectedRole === "Katil" && state.ownedRoles.includes("Vampir") && Math.random() < 0.4) {
+    selectedRole = "Vampir";
+ }
+ if(selectedRole === "Şerif" && state.ownedRoles.includes("Kütük Şerif")) {
+    selectedRole = "Kütük Şerif";
+ }
+
+ state.role = selectedRole;
+ state.alive = true;
+ save();
+ toast("Rolün gizlice belirlendi: " + state.role);
+ renderKim();
+}
+
+function actions(a){
+ if(a==="openKim"){state.screen="kim";save();render()}
+ else if(a==="leave"){state.screen="home";state.role=null;render()}
+ else if(a==="start") startGame()
+ else if(a==="daily"){
+  if(state.dailyClaim){state.fp+=100;state.dailyClaim=false;save();toast("+100 FP günlük ödül!")}
+  else toast("Bugünkü ödülü zaten aldın.")
+ }
+ else if(a==="spin"){
+  if(state.spins<=0) return toast("Bugünkü çark hakkın bitti.");
+  state.spins--;
+  let r=Math.random();
+  let prize=r<.12?500:r<.35?200:r<.55?100:50;
+  state.fp+=prize;
+  save();
+  toast("Çarktan +"+prize+" FP çıktı!");
+  renderShop();
+ }
+ else if(a.startsWith("buy:")){
+  let [_,n,name,c]=a.split(":");c=+c;
+  if(state.fp<c) return toast("Yeterli FP yok.");
+  state.fp-=c;
+  if(name==="Vampir Efekti") state.ownedRoles.push("Vampir");
+  if(name==="Kütük Şerif") state.ownedRoles.push("Kütük Şerif");
+  state.inventory.push(name);
+  save();
+  toast(name+" satın alındı!");
+  renderShop();
+ }
+ else if(a==="vent"){
+  if(state.role==="Katil"||state.role==="Vampir") toast("Vent kullanıldı.");
+  else toast("Vent sadece Katil/Vampir için kullanılabilir.");
+ }
+ else if(a==="soon") toast("İkinci oyun geliştirme aşamasında :3")
+ else if(a==="copy"){navigator.clipboard?.writeText("FMAX-"+state.name.toUpperCase()+"-4757");toast("Kod kopyalandı!")}
+ else if(a==="admin") admin()
+}
+
+function admin(){
+ const code=prompt("Admin kodu girin:");
+ if(code==="FMAXADMIN4757FMAX"){
+  let x=prompt("1: +10000 FP\n2: Vampir Rolünü Aç\n3: Kütük Şerif Aç\n4: Admin Yetkilerini Uygula");
+  if(x==="1") state.fp+=10000;
+  if(x==="2") state.ownedRoles.push("Vampir");
+  if(x==="3") state.ownedRoles.push("Kütük Şerif");
+  if(x==="4"){ state.fp+=50000; state.ownedRoles.push("Vampir","Kütük Şerif"); }
+  save();
+  toast("Admin işlemi başarıyla uygulandı! ✨");
+  render();
+ } else {
+  toast("Geçersiz Kod!");
+ }
+}
+
+document.addEventListener("keydown",e=>{if(e.ctrlKey&&e.shiftKey&&e.key.toUpperCase()==="F")admin()});
+
+render();
+    
